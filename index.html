@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linguado e suas aventuras</title>
+    <link rel="shortcut icon" href="imgs/peixe.gif">
+    <link href="https://fonts.googleapis.com/css2?family=Cookie&display=swap" rel="stylesheet"> 
+    
+    <style>
+        canvas{
+            border: 5px solid white;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        body{
+            background-image: url(imgs/tela.jpg) ;
+            background-size: cover;
+            background-repeat: no-repeat;
+            overflow: hidden;
+        }
+        h1{
+           
+            color: #F08080;
+            text-align: center;
+            font-family: 'Cookie', cursive;
+            font-size: 50px;
+        }
+        
+    </style>
+</head>
+<body>
+    <h1>Linguado e suas aventuras</h1>
+    <canvas id="jogo" width="626" height="442"></canvas>
+    <audio src="audio/aqui-no-mar.mp3" controls autoplay loop>
+        </audio>>
+    <script>
+        class Sprite {
+            constructor(x, y, largura, altura, imagem){
+                this.x = x;
+                this.y = y;
+                this.largura = largura;
+                this.altura = altura;
+                this.imagem = imagem;
+            }
+            desenha(ctx){
+                if(this.imagem){
+                    ctx.drawImage(this.imagem, this.x, this.y, this.largura, this.altura);
+                } else {
+                    ctx.strokeRect(this.x, this.y, this.largura, this.altura);
+
+                }
+            }
+        }
+        let canvasEl = document.querySelector('#jogo');
+        let ctx = canvasEl.getContext('2d');
+       
+        let imagemFundo = new Image;
+        imagemFundo.src = 'imgs/fundo.jpg';
+        let fundo = new Sprite(0,0,626, 442, imagemFundo);
+
+        imagemFundo.addEventListener( 'load', (evento)=>{
+            desenhaJogo();
+        });
+
+        let imagemTubarao = new Image;
+        imagemTubarao.src = 'imgs/tubarao.png';
+        let tubarao = new Sprite(10,240,200, 200, imagemTubarao);
+
+        imagemTubarao.addEventListener( 'load', (evento)=>{
+            desenhaJogo();
+        });
+
+        let imagemConcha = new Image;
+        imagemConcha.src = 'imgs/concha.png';
+        let concha = new Sprite(500,325,100,100, imagemConcha);
+
+        imagemConcha.addEventListener( 'load', (evento)=>{
+            desenhaJogo();
+        });
+
+
+
+        let imagemPeixe = new Image;
+        imagemPeixe.src = 'imgs/peixe.gif';
+        let peixe = new Sprite(400, 200, 100, 90, imagemPeixe);
+        
+        imagemPeixe.addEventListener( 'load', (evento)=>{
+            desenhaJogo();
+        });
+
+        //let perolas = [];
+        //perolas.push(new Sprite(400, 150, 20, 20));
+       
+        canvasEl.addEventListener('mousemove', (evento)=> {
+            peixe.x = evento.offsetX - peixe.largura/2;
+            peixe.y = evento.offsetY - peixe.altura/2;
+            desenhaJogo();
+        });
+
+        function desenhaJogo(){
+            ctx.clearRect(0, 0, 626, 442);
+            fundo.desenha(ctx);
+            tubarao.desenha(ctx);
+            concha.desenha(ctx);
+            peixe.desenha(ctx);
+
+        //for(let perola of perolas){
+          //  perola.desenha(ctx);
+            
+       //}
+            ctx.fillStyle = '#F5FFFA';
+            ctx.beginPath();
+            ctx.arc(520, 425, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(540, 423, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(560, 425, 10, 0, Math.PI * 2);
+            ctx.fill();
+
+            
+        }
+    </script>
+</body>
+</html>
