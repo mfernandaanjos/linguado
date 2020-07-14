@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linguado e suas aventuras</title>
+    <link rel="shortcut icon" href="imgs/peixe.gif">
+    <link href="https://fonts.googleapis.com/css2?family=Cookie&display=swap" rel="stylesheet"> 
+    
+    <style>
+        canvas{
+            border: 5px solid white;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            cursor: none;
+        }
+        body{
+            background-image: url(imgs/tela.jpg) ;
+            background-size: cover;
+            background-repeat: no-repeat;
+            overflow: hidden;
+        }
+        h1{
+           
+            color: #F08080;
+            text-align: center;
+            font-family: 'Cookie', cursive;
+            font-size: 50px;
+        }
+        
+    </style>
+</head>
+<body>
+    <h1>Linguado e suas aventuras</h1>
+    <canvas id="jogo" width="626" height="442"></canvas>
+    <script>
+        const ALTURA_JOGO = 442;
+        const LARGURA_JOGO = 626;
+
+        class Sprite {
+            constructor(x, y, largura, altura, imagem){
+                this.x = x;
+                this.y = y;
+                this.largura = largura;
+                this.altura = altura;
+                this.imagem = imagem;
+            }
+            desenha(ctx){
+                if(this.imagem){
+                    ctx.drawImage(this.imagem, this.x, this.y, this.largura, this.altura);
+                } else {
+                    ctx.strokeRect(this.x, this.y, this.largura, this.altura);
+
+                }
+            }
+
+            get centro() {
+                return {
+                    x: this.x + this.largura / 2,
+                    y: this.y + this.altura / 2
+                };
+            }
+
+            colideCom(outraSprite) {
+                let a = Math.abs(outraSprite.centro.x - this.centro.x);
+                let b = Math.abs(outraSprite.centro.y - this.centro.y);
+                let d = Math.sqrt(a ** 2 + b ** 2);
+                let r1 = this.altura / 2;
+                let r2 = outraSprite.altura / 2;
+
+                return d <= r1 + r2;
+            }
+        }
+        
+        class Tubarao extends Sprite {
+            constructor() {
+                super(LARGURA_JOGO, Math.random() * (ALTURA_JOGO - 30), 50, 50, imagemTubarao);
+                this.velocidadeX = -2 * Math.random() - 1;
+            }
+
+            atualizar() {
+                this.x += this.velocidadeX;
+
+                if (this.x + this.largura < 0) {
+                    this.x = LARGURA_JOGO;
+                    this.y = Math.random() * (ALTURA_JOGO - 30);
+                }
+            }
+
+            destruir() {
+                this.x = LARGURA_JOGO;
+                this.y = Math.random() * (ALTURA_JOGO - 30);
+
+                const ding = new Audio();
+                ding.src = 'sounds/ding.mp3';
+                ding.preload = 'auto';
+                ding.play();
+            }
+        }
+        class Tiro extends Sprite {
+            constructor(peixe) {
+                super(peixe.centro.x, peixe.centro.y, 15, 15, imagemPerola);
+                this.velocidadeX = 6;
+            }
+
+            atualizar() {
+                this.x += this.velocidadeX;
+                if (this.x > LARGURA_JOGO) {
+                    this.podeSerDestruido = true;
+                }
+            }
+        }
+
+
+        let canvasEl = document.querySelector('#jogo');
+        let ctx = canvasEl.getContext('2d');
+
+        let vidas = 10;
+        let pontos = 0;
+
+        let imagemFundo = new Image;
+        imagemFundo.src = 'imgs/fundo.jpg';
+        let fundo = new Sprite(0,0,626, 442, imagemFundo);
+
+        imagemFundo.addEventListener( 'load', (evento)=>{
+            desenhaJogo();
+        });
+
+        let imagemTubarao = new Image;
+        imagemTubarao.src = 'imgs/tubarao.png';
+        let tub = new Sprite(420,240,200, 200, imagemTubarao);
+
+        imagemTubarao.addEventListener( 'load', (evento)=>{
+            desenhaJogo();
+        });
+
+        let imagemConcha = new Image;
+        imagemConcha.src = 'imgs/concha.png';
+        let concha = new Sprite(10,325,100,100, imagemConcha);
+
+        imagemConcha.addEventListener( 'load', (evento)=>{
+            desenhaJogo();
+        });
+
+        let imagemPeixe = new Image;
+        imagemPeixe.src = 'imgs/peixe.gif';
+        let peixe = new Sprite(20, 300, 100, 90, imagemPeixe);
+        
+        imagemPeixe.addEventListener( 'load', (evento)=>{
+            desenhaJogo();
+        });
+
+        imagemPerola = new Image;
+        imagemPerola.src = 'imgs/perola.png';
+
+        let tubaroes = [];
+        tubaroes.push(new Tubarao());
+        tubaroes.push(new Tubarao());
+        tubaroes.push(new Tubarao());
+
+        let tiros = [];
+
+       
+        canvasEl.addEventListener('mousemove', (evento)=> {
+            peixe.x = evento.offsetX - peixe.largura/2;
+            peixe.y = evento.offsetY - peixe.altura/2;
+        });
+
+        function desenhaJogo(){
+            ctx.clearRect(0, 0, 626, 442);
+            fundo.desenha(ctx);
+            tub.desenha(ctx);
+            concha.desenha(ctx);
+            peixe.desenha(ctx);
+
+        for(let tubarao of tubaroes){
+           tubarao.desenha(ctx);
+            
+         }
+         for (let tiro of tiros) {
+                tiro.desenha(ctx);
+            }
+
+            ctx.fillStyle = 'white';
+            ctx.font = "30px 'Cookie'";
+            ctx.fillText(`${vidas} vida(s)`, 10, 25);
+            ctx.fillText(`${pontos} ponto(s)`, 525, 25);
+
+        }
+
+        function atualizaInimigos() {
+            for (let tubarao of tubaroes) {
+                tubarao.atualizar();
+            }
+        }
+
+
+        function atualizaTiros() {
+            for (let tiro of tiros) {
+                tiro.atualizar();
+            }
+
+            for (let i = 0; i < tiros.length; i++) {
+                if (tiros[i].podeSerDestruido) {
+                    tiros.splice(i, 1);
+                }
+            }
+        }
+
+        function verificaColisoes() {
+            for (let tubarao of tubaroes) {
+                const atingiuPeixe = tubarao.colideCom(peixe);
+                if (atingiuPeixe) {
+                    tubarao.destruir();
+                    vidas--;
+                    if (vidas < 1) {
+                        alert('Você perdeu todas as vidas...\nO Linguado vai descansar de suas aventuras!')
+                    }
+                }
+            }
+
+            for (let tubarao of tubaroes) {
+                for (let tiro of tiros) {
+                    const tiroAtingiuTubarao = tiro.colideCom(tubarao);
+                    if (tiroAtingiuTubarao) {
+                        tiro.podeSerDestruido = true;
+                        tubarao.destruir();
+                        pontos++;
+                    }
+                }
+            }
+        }
+
+        function atualizaLogicaJogo(){
+            atualizaInimigos();
+            atualizaTiros();
+            verificaColisoes();
+
+            desenhaJogo();
+        }
+
+        setInterval(atualizaLogicaJogo, 33);
+
+        function darTiro() {
+            let tiro = new Tiro(peixe);
+            tiros.push(tiro);
+        }
+
+        document.body.addEventListener('keydown', e => {
+            if (e.key === ' ') {
+                darTiro();
+                
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
